@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — {{ user.business_name }} | Loan Ledger</title>
+    <meta name="description" content="Business dashboard for {{ user.business_name }}. Manage customers, track dues, and monitor payments.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --violet: #7c3aed;
+            --violet-dark: #5b21b6;
+            --blue: #2563eb;
+            --blue-dark: #1e3a8a;
+            --orange: #f97316;
+            --pink: #ec4899;
+            --light-blue: #dbeafe;
+            --bg: #f0f2f5;
+            --card-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 10px 40px -10px rgba(0,0,0,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        /* ─── NAVBAR ─── */
+        .top-nav {
+            background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(124,58,237,0.25);
+        }
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+        .nav-brand-text {
+            color: white;
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+        .nav-brand-sub {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.72rem;
+            font-weight: 400;
+        }
+        .profile-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            object-fit: cover;
+        }
+        .profile-avatar:hover {
+            border-color: white;
+            transform: scale(1.05);
+        }
+
+        /* ─── STATS ─── */
+        .stats-section {
+            margin-top: -1px;
+            background: linear-gradient(135deg, var(--violet) 0%, var(--blue) 100%);
+            padding: 0 0 50px 0;
+            position: relative;
+        }
+        .stats-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: var(--bg);
+            border-radius: 30px 30px 0 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 24px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            background: rgba(255,255,255,0.18);
+            transform: translateY(-3px);
+        }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 14px;
+        }
+        .stat-icon-due { background: rgba(239,68,68,0.25); color: #fca5a5; }
+        .stat-icon-count { background: rgba(249,115,22,0.25); color: #fdba74; }
+        .stat-icon-total { background: rgba(34,197,94,0.25); color: #86efac; }
+        .stat-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        /* ─── ACTION BUTTONS ─── */
+        .action-row {
+            margin-top: -25px;
+            position: relative;
+            z-index: 5;
+            margin-bottom: 24px;
+        }
+        .btn-action {
+            border: none;
+            border-radius: 16px;
+            padding: 16px 24px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.3px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-add-customer {
+            background: linear-gradient(135deg, var(--violet), var(--blue));
+            color: white;
+            box-shadow: 0 6px 20px rgba(124,58,237,0.35);
+        }
+        .btn-add-customer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124,58,237,0.45);
+            color: white;
+        }
+        .btn-cust-login {
+            background: linear-gradient(135deg, var(--orange), var(--pink));
+            color: white;
+            box-shadow: 0 6px 20px rgba(249,115,22,0.3);
+        }
+        .btn-cust-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(249,115,22,0.4);
+            color: white;
+        }
+
+        /* ─── CUSTOMER LIST ─── */
+        .list-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .list-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .list-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .list-count {
+            background: var(--light-blue);
+            color: var(--blue);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 50px;
+        }
+        .search-box {
+            position: relative;
+            width: 260px;
+        }
+        .search-box input {
+            border-radius: 12px;
+            padding: 10px 14px 10px 38px;
+            border: 1.5px solid #e5e7eb;
+            font-size: 0.85rem;
+            width: 100%;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+        .search-box input:focus {
+            border-color: var(--violet);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
+            background: white;
+            outline: none;
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        /* ─── CUSTOMER ROW ─── */
+        .customer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+        .customer-item:last-child { border-bottom: none; }
+        .customer-item:hover {
+            background: #f8f7ff;
+        }
+        .customer-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .customer-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        .customer-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #1f2937;
+        }
+        .customer-phone {
+            font-size: 0.78rem;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+        .customer-balance {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .balance-amount {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .balance-due { color: #ef4444; }
+        .balance-advance { color: #22c55e; }
+        .balance-settled { color: #9ca3af; }
+        .balance-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            background: #f3f4f6;
+            border-radius: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+        .empty-title { font-weight: 700; color: #374151; margin-bottom: 6px; }
+        .empty-desc { color: #9ca3af; font-size: 0.85rem; }
+
+        /* ─── OFFCANVAS PROFILE ─── */
+        .offcanvas {
+            border-radius: 24px 0 0 24px;
+            border: none;
+        }
+        .profile-head {
+            background: linear-gradient(135deg, var(--violet), var(--blue));
+            padding: 40px 24px 30px;
+            text-align: center;
+            color: white;
+            border-radius: 0 0 30px 30px;
+        }
+        .profile-head-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            margin-bottom: 12px;
+        }
+        .profile-head h4 { font-weight: 700; margin-bottom: 4px; }
+        .profile-head p { opacity: 0.7; font-size: 0.85rem; }
+        .profile-field {
+            padding: 14px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .profile-field:last-child { border-bottom: none; }
+        .profile-field-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #9ca3af;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .profile-field-value {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.92rem;
+        }
+        .btn-logout {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-weight: 700;
+            width: 100%;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239,68,68,0.35);
+            color: white;
+        }
+
+        /* ─── MODAL ─── */
+        .modal-content {
+            border: none;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, var(--violet), var(--blue));
+            border: none;
+            padding: 24px 28px 20px;
+        }
+        .modal-header .modal-title { color: white; font-weight: 700; }
+        .modal-header .btn-close { filter: invert(1); opacity: 0.7; }
+        .modal-body { padding: 24px 28px; }
+        .modal .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .modal .form-control, .modal textarea {
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1.5px solid #e5e7eb;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+        .modal .form-control:focus, .modal textarea:focus {
+            border-color: var(--violet);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+            background: white;
+        }
+        .modal-footer {
+            border: none;
+            padding: 0 28px 28px;
+        }
+        .btn-save-customer {
+            background: linear-gradient(135deg, var(--violet), var(--blue));
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        .btn-save-customer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124,58,237,0.35);
+            color: white;
+        }
+
+        /* ─── ALERT ─── */
+        .alert {
+            border-radius: 14px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .alert-error, .alert-danger { background: #fef2f2; color: #dc2626; }
+        .alert-success { background: #f0fdf4; color: #16a34a; }
+        .alert-info { background: #eff6ff; color: #2563eb; }
+        .alert-warning { background: #fffbeb; color: #d97706; }
+
+        /* ─── AVATAR COLORS ─── */
+        .avatar-1 { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+        .avatar-2 { background: linear-gradient(135deg, #ec4899, #f43f5e); }
+        .avatar-3 { background: linear-gradient(135deg, #f97316, #eab308); }
+        .avatar-4 { background: linear-gradient(135deg, #14b8a6, #22d3ee); }
+        .avatar-5 { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+        .avatar-6 { background: linear-gradient(135deg, #ef4444, #f97316); }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .search-box { width: 100%; }
+            .list-header { padding: 16px; }
+            .customer-item { padding: 14px 16px; }
+            .stat-value { font-size: 1.3rem; }
+        }
+
+        /* ─── ANIMATIONS ─── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    </style>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav class="top-nav">
+    <div class="container nav-inner">
+        <a href="{% url 'dashboard' %}" class="nav-brand">
+            <div class="nav-logo"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div>
+                <div class="nav-brand-text">{{ user.business_name }}</div>
+                <div class="nav-brand-sub">Loan Ledger</div>
+            </div>
+        </a>
+        <img src="https://ui-avatars.com/api/?name={{ user.business_name }}&background=6d28d9&color=fff&bold=true&size=42&rounded=true&format=svg"
+             alt="Profile"
+             class="profile-avatar"
+             data-bs-toggle="offcanvas"
+             data-bs-target="#profilePanel"
+             id="profileBtn">
+    </div>
+</nav>
+
+<!-- ═══ STATS SECTION ═══ -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row g-3 pt-3">
+            <div class="col-4">
+                <div class="stat-card animate-in delay-1">
+                    <div class="stat-icon stat-icon-due"><i class="bi bi-cash-stack"></i></div>
+                    <div class="stat-label">Total Due</div>
+                    <div class="stat-value">₹{{ total_due_all|floatformat:0 }}</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card animate-in delay-2">
+                    <div class="stat-icon stat-icon-count"><i class="bi bi-people-fill"></i></div>
+                    <div class="stat-label">Due Customers</div>
+                    <div class="stat-value">{{ customers_with_due }}</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card animate-in delay-3">
+                    <div class="stat-icon stat-icon-total"><i class="bi bi-person-check-fill"></i></div>
+                    <div class="stat-label">Total Customers</div>
+                    <div class="stat-value">{{ total_customers }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══ ACTION BUTTONS ═══ -->
+<div class="container">
+    <div class="action-row">
+        <div class="row g-3">
+            <div class="col-6">
+                <button class="btn btn-action btn-add-customer" data-bs-toggle="modal" data-bs-target="#addCustomerModal" id="addCustomerBtn">
+                    <i class="bi bi-person-plus-fill fs-5"></i> Add Customer
+                </button>
+            </div>
+            <div class="col-6">
+                <a href="{% url 'customer_login' %}" class="btn btn-action btn-cust-login" id="customerLoginBtn">
+                    <i class="bi bi-person-badge fs-5"></i> Customer Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ALERTS ═══ -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert" id="alertMsg">
+                <i class="bi bi-check-circle-fill me-1"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- ═══ CUSTOMER LIST ═══ -->
+    <div class="list-card mb-4 animate-in delay-2">
+        <div class="list-header">
+            <div class="list-title">
+                <i class="bi bi-journal-text text-primary"></i>
+                Customer Ledger
+                <span class="list-count">{{ total_customers }}</span>
+            </div>
+            <form method="get" class="search-box" id="searchForm">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" name="search" placeholder="Search name or phone..."
+                       value="{{ search_query|default:'' }}" id="searchInput">
+            </form>
+        </div>
+
+        <div id="customerList">
+            {% for item in customers %}
+                <a href="{% url 'customer_transactions' item.customer.id %}" class="customer-item" id="customer-{{ item.customer.id }}">
+                    <div class="customer-left">
+                        <div class="customer-avatar avatar-{{ forloop.counter|divisibleby:6|yesno:'6,' }}{% widthratio forloop.counter0 1 1 as mod %}{% if not forloop.counter|divisibleby:6 %}{{ forloop.counter0|add:1 }}{% endif %}">
+                            {{ item.customer.name|first|upper }}
+                        </div>
+                        <div>
+                            <div class="customer-name">{{ item.customer.name }}</div>
+                            <div class="customer-phone"><i class="bi bi-telephone me-1"></i>{{ item.customer.phone_number }}</div>
+                        </div>
+                    </div>
+                    <div class="customer-balance">
+                        {% if item.balance > 0 %}
+                            <div class="balance-amount balance-due">₹{{ item.balance|floatformat:2 }}</div>
+                            <div class="balance-label balance-due">DUE</div>
+                        {% elif item.balance < 0 %}
+                            <div class="balance-amount balance-advance">₹{{ item.balance_abs|floatformat:2 }}</div>
+                            <div class="balance-label balance-advance">ADVANCE</div>
+                        {% else %}
+                            <div class="balance-amount balance-settled">₹0.00</div>
+                            <div class="balance-label balance-settled">SETTLED</div>
+                        {% endif %}
+                    </div>
+                </a>
+            {% empty %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-people"></i></div>
+                    <div class="empty-title">No Customers Yet</div>
+                    <div class="empty-desc">Click "Add Customer" to create your first entry</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- ═══ PROFILE OFFCANVAS ═══ -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="profilePanel">
+    <div class="offcanvas-header p-0">
+        <div class="profile-head w-100">
+            <button type="button" class="btn-close filter-invert position-absolute top-0 end-0 m-3" data-bs-dismiss="offcanvas" style="filter: invert(1); opacity: 0.7;"></button>
+            <img src="https://ui-avatars.com/api/?name={{ user.business_name }}&background=ffffff&color=7c3aed&bold=true&size=80&rounded=true&format=svg"
+                 alt="Avatar" class="profile-head-avatar">
+            <h4>{{ user.business_name }}</h4>
+            <p><i class="bi bi-telephone me-1"></i>{{ user.phone_number }}</p>
+        </div>
+    </div>
+    <div class="offcanvas-body px-4 pt-4">
+        <div class="profile-field">
+            <div class="profile-field-label">Full Name</div>
+            <div class="profile-field-value">{{ user.first_name|default:user.business_name }} {{ user.last_name|default:"" }}</div>
+        </div>
+        <div class="profile-field">
+            <div class="profile-field-label">Business Name</div>
+            <div class="profile-field-value">{{ user.business_name }}</div>
+        </div>
+        <div class="profile-field">
+            <div class="profile-field-label">Phone Number</div>
+            <div class="profile-field-value">{{ user.phone_number }}</div>
+        </div>
+        <div class="profile-field">
+            <div class="profile-field-label">Email</div>
+            <div class="profile-field-value">{{ user.email|default:"Not provided" }}</div>
+        </div>
+        <div class="profile-field">
+            <div class="profile-field-label">Address</div>
+            <div class="profile-field-value">{{ user.address|default:"Not provided" }}</div>
+        </div>
+
+        <div class="mt-4">
+            <a href="{% url 'logout' %}" class="btn btn-logout" id="logoutBtn">
+                <i class="bi bi-box-arrow-right me-2"></i>LOGOUT
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ADD CUSTOMER MODAL ═══ -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus-fill me-2"></i>Register New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'customer_register' %}" method="post" id="addCustomerForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Customer full name" required id="custName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" name="phone" class="form-control" placeholder="e.g. 9876543210" required id="custPhone">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email <span class="text-muted" style="text-transform:none;font-weight:400;">(Optional)</span></label>
+                        <input type="email" name="email" class="form-control" placeholder="e.g. name@example.com" id="custEmail">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label">Address <span class="text-muted" style="text-transform:none;font-weight:400;">(Optional)</span></label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Street, City, State" id="custAddress"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-save-customer" id="saveCustomerBtn">
+                        <i class="bi bi-check-circle me-2"></i>SAVE CUSTOMER
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Avatar color assignment based on name
+    document.querySelectorAll('.customer-avatar').forEach((el, i) => {
+        const colors = ['avatar-1','avatar-2','avatar-3','avatar-4','avatar-5','avatar-6'];
+        el.classList.add(colors[i % colors.length]);
+    });
+
+    // Auto-dismiss alerts after 4 seconds
+    document.querySelectorAll('.alert-dismissible').forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        }, 4000);
+    });
+</script>
+</body>
+</html>
