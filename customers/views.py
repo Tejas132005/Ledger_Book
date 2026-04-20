@@ -163,7 +163,7 @@ class GeneratePDFView(View):
         
         for tx in transactions:
             data.append([
-                tx.date.strftime('%d-%m-%Y'),
+                tx.date.strftime('%d/%m/%Y'),
                 tx.get_type_display(),
                 tx.reason if tx.reason else '-',
                 f"Rs. {tx.amount:.2f}",

@@ -753,7 +753,7 @@
                             {% for tx in transactions %}
                             <tr id="tx-row-{{ tx.id }}">
                                 <td>
-                                    <div class="tx-date-main">{{ tx.date|date:"d M Y" }}</div>
+                                    <div class="tx-date-main">{{ tx.date|date:"d/m/Y" }}</div>
                                 </td>
                                 <td>
                                     {% if tx.type == 'due' %}
