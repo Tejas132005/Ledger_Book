@@ -22,5 +22,5 @@ class Customer(models.Model):
         return f"{self.name} ({self.phone_number})"
 
     def get_balance(self):
-        last_tx = self.transactions.order_by('date_time', 'id').last()
+        last_tx = self.transactions.order_by('date', 'id').last()
         return last_tx.running_balance if last_tx else 0

@@ -2,6 +2,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
 from django.http import JsonResponse
+from django.utils import timezone
 from customers.models import Customer
 from .models import Transaction
 
@@ -17,6 +18,8 @@ class AddTransactionView(View):
             return redirect('customer_transactions', customer_id=customer.id)
 
         tx_type = request.POST.get('type', 'due')
+        tx_date_str = request.POST.get('date')
+        reason = request.POST.get('reason', '')
 
         if amount <= 0:
             messages.error(request, "Amount must be greater than ₹0.")
@@ -24,6 +27,20 @@ class AddTransactionView(View):
 
         if tx_type not in ('due', 'paid'):
             messages.error(request, "Invalid transaction type.")
+            return redirect('customer_transactions', customer_id=customer.id)
+
+        if not tx_date_str:
+            messages.error(request, "Date is required.")
+            return redirect('customer_transactions', customer_id=customer.id)
+
+        try:
+            tx_date = timezone.datetime.strptime(tx_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, "Invalid date format.")
+            return redirect('customer_transactions', customer_id=customer.id)
+
+        if tx_date > timezone.now().date():
+            messages.error(request, "Future dates are not allowed.")
             return redirect('customer_transactions', customer_id=customer.id)
 
         current_balance = customer.get_balance()
@@ -37,12 +54,24 @@ class AddTransactionView(View):
             customer=customer,
             type=tx_type,
             amount=amount,
+            date=tx_date,
+            reason=reason,
             running_balance=new_balance
         )
 
         action = "added as DUE" if tx_type == 'due' else "received as PAYMENT"
         messages.success(request, f"₹{amount:.2f} {action}. New balance: ₹{new_balance:.2f}")
         return redirect('customer_transactions', customer_id=customer.id)
+
+
+class UpdateReasonView(View):
+    def post(self, request, pk):
+        tx = get_object_or_404(Transaction, pk=pk)
+        new_reason = request.POST.get('reason', '')
+        tx.reason = new_reason
+        tx.save()
+        messages.success(request, "Reason updated successfully.")
+        return redirect('customer_transactions', customer_id=tx.customer.id)
 
 
 class DeleteTransactionView(View):
@@ -53,7 +82,7 @@ class DeleteTransactionView(View):
         # Delete this transaction and all subsequent ones (cascade forward)
         Transaction.objects.filter(
             customer=customer,
-            date_time__gte=tx.date_time,
+            date__gte=tx.date,
             id__gte=tx.id
         ).delete()
 

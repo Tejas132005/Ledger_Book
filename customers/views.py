@@ -3,6 +3,7 @@ from django.db.models import Q, functions
 from django.views import View
 from django.contrib import messages
 from django.http import HttpResponse
+from django.utils import timezone
 from .models import Customer
 from transactions.models import Transaction
 import io
@@ -90,7 +91,7 @@ class CustomerTransactionView(View):
         if not (is_admin or is_logged_customer):
             return redirect('customer_login')
 
-        transactions = customer.transactions.all().order_by('date_time', 'id')
+        transactions = customer.transactions.all().order_by('date', 'id')
         total_due = customer.get_balance()
 
         context = {
@@ -99,6 +100,7 @@ class CustomerTransactionView(View):
             'total_due': total_due,
             'total_due_abs': abs(total_due),
             'is_admin': is_admin,
+            'today': timezone.now().date(),
         }
         return render(request, 'customers/transactions.html', context)
 
@@ -156,13 +158,14 @@ class GeneratePDFView(View):
         elements.append(Spacer(1, 12))
 
         # Add Table
-        data = [['Date', 'Type', 'Amount', 'Balance']]
-        transactions = customer.transactions.all().order_by('date_time', 'id')
+        data = [['Date', 'Type', 'Reason', 'Amount', 'Balance']]
+        transactions = customer.transactions.all().order_by('date', 'id')
         
         for tx in transactions:
             data.append([
-                tx.date_time.strftime('%d-%m-%Y %H:%M'),
+                tx.date.strftime('%d-%m-%Y'),
                 tx.get_type_display(),
+                tx.reason if tx.reason else '-',
                 f"Rs. {tx.amount:.2f}",
                 f"Rs. {tx.running_balance:.2f}"
             ])
