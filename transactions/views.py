@@ -50,6 +50,19 @@ class AddTransactionView(View):
         else:
             new_balance = current_balance - amount
 
+        # Duplicate check: prevent same transaction within 10 seconds
+        last_tx = Transaction.objects.filter(customer=customer).last()
+        if last_tx:
+            # Check if it was created very recently (within 10 seconds)
+            time_diff = (timezone.now() - last_tx.created_at).total_seconds()
+            if (time_diff < 10 and
+                last_tx.amount == amount and 
+                last_tx.type == tx_type and 
+                last_tx.date == tx_date and 
+                last_tx.reason == reason):
+                messages.warning(request, "Duplicate transaction detected and ignored.")
+                return redirect('customer_transactions', customer_id=customer.id)
+
         Transaction.objects.create(
             customer=customer,
             type=tx_type,

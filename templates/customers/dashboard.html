@@ -531,12 +531,17 @@
 <div class="container">
     <div class="action-row">
         <div class="row g-3">
-            <div class="col-6">
+            <div class="col-md-4 col-12">
                 <button class="btn btn-action btn-add-customer" data-bs-toggle="modal" data-bs-target="#addCustomerModal" id="addCustomerBtn">
                     <i class="bi bi-person-plus-fill fs-5"></i> Add Customer
                 </button>
             </div>
-            <div class="col-6">
+            <div class="col-md-4 col-6">
+                <a href="{% url 'customer_list' %}" class="btn btn-action btn-cust-details" id="customerDetailsBtn" style="background: linear-gradient(135deg, var(--blue), #0ea5e9); color: white; box-shadow: 0 6px 20px rgba(37,99,235,0.3);">
+                    <i class="bi bi-person-lines-fill fs-5"></i> Customer Details
+                </a>
+            </div>
+            <div class="col-md-4 col-6">
                 <a href="{% url 'customer_login' %}" class="btn btn-action btn-cust-login" id="customerLoginBtn">
                     <i class="bi bi-person-badge fs-5"></i> Customer Login
                 </a>

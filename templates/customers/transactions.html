@@ -975,7 +975,15 @@
     }
 
     /* ─── COMMIT TRANSACTION ─── */
+    let isSubmitting = false;
     function commitTransaction() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
+        const proceedBtn = document.getElementById('proceedBtn');
+        proceedBtn.disabled = true;
+        proceedBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>SUBMITTING...';
+
         const form = document.getElementById('txForm');
         form.action = "{% url 'add_transaction' customer.id %}";
         form.method = "POST";

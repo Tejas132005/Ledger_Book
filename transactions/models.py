@@ -19,6 +19,7 @@ class Transaction(models.Model):
     date = models.DateField(default=timezone.now)
     reason = models.TextField(null=True, blank=True)
     running_balance = models.FloatField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['date', 'id']

@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, functions
 from django.views import View
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.urls import reverse_lazy
 from .models import Customer
 from transactions.models import Transaction
 import io
@@ -197,3 +198,59 @@ class GeneratePDFView(View):
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{customer.name}_ledger.pdf"'
         return response
+
+
+class CustomerListView(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        search_query = request.GET.get('search', '').strip()
+        customers = Customer.objects.filter(user=request.user).order_by(functions.Lower('name'))
+
+        if search_query:
+            customers = customers.filter(
+                Q(name__icontains=search_query) | Q(phone_number__icontains=search_query)
+            )
+            
+        return render(request, 'customers/customer_list.html', {
+            'customers': customers,
+            'search_query': search_query
+        })
+
+
+class CustomerUpdateView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        customer = get_object_or_404(Customer, pk=pk, user=request.user)
+        customer.name = request.POST.get('name', '').strip()
+        customer.phone_number = request.POST.get('phone', '').strip()
+        customer.email = request.POST.get('email', '').strip()
+        customer.address = request.POST.get('address', '').strip()
+
+        if not customer.name or not customer.phone_number:
+            messages.error(request, "Name and Phone number are required.")
+            return redirect('customer_list')
+
+        # Check if phone number is already used by another customer for this user
+        if Customer.objects.filter(user=request.user, phone_number=customer.phone_number).exclude(pk=pk).exists():
+            messages.error(request, "A customer with this phone number already exists.")
+            return redirect('customer_list')
+
+        customer.save()
+        messages.success(request, f"Customer '{customer.name}' updated successfully!")
+        return redirect('customer_list')
+
+
+class CustomerDeleteView(View):
+    def post(self, request, pk):
+        if not request.user.is_authenticated:
+            return redirect('login')
+        
+        customer = get_object_or_404(Customer, pk=pk, user=request.user)
+        customer_name = customer.name
+        customer.delete()
+        messages.warning(request, f"Customer '{customer_name}' and all related transactions have been deleted.")
+        return redirect('customer_list')
