@@ -256,6 +256,11 @@
             background: #f0fdf4;
             color: var(--green);
         }
+        .type-btn.active-interest {
+            border-color: #d97706;
+            background: #fffbeb;
+            color: #d97706;
+        }
         .type-btn:hover { border-color: #9ca3af; }
         .type-btn i { font-size: 1.1rem; display: block; margin-bottom: 2px; }
 
@@ -357,12 +362,17 @@
             background: #f0fdf4;
             color: #22c55e;
         }
+        .badge-interest {
+            background: #fffbeb;
+            color: #d97706;
+        }
         .tx-amount {
             font-weight: 700;
             font-size: 0.92rem;
         }
         .tx-amount-due { color: #ef4444; }
         .tx-amount-paid { color: #22c55e; }
+        .tx-amount-interest { color: #d97706; }
         .tx-balance {
             font-weight: 700;
             font-size: 0.92rem;
@@ -715,6 +725,10 @@
                                 <i class="bi bi-arrow-down-circle-fill"></i>
                                 PAY (Received)
                             </div>
+                            <div class="type-btn" id="btnInterest" onclick="selectType('interest')">
+                                <i class="bi bi-percent"></i>
+                                INTEREST
+                            </div>
                         </div>
                     </div>
                     <button type="submit" class="btn-submit-tx" id="submitTxBtn">
@@ -760,6 +774,10 @@
                                         <span class="badge-tx badge-due">
                                             <i class="bi bi-arrow-up-short"></i> DUE
                                         </span>
+                                    {% elif tx.type == 'interest' %}
+                                        <span class="badge-tx badge-interest">
+                                            <i class="bi bi-percent"></i> INTEREST
+                                        </span>
                                     {% else %}
                                         <span class="badge-tx badge-paid">
                                             <i class="bi bi-arrow-down-short"></i> PAID
@@ -779,8 +797,8 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="tx-amount {% if tx.type == 'due' %}tx-amount-due{% else %}tx-amount-paid{% endif %}">
-                                        {% if tx.type == 'due' %}+{% else %}-{% endif %}₹{{ tx.amount|floatformat:2 }}
+                                    <span class="tx-amount {% if tx.type == 'due' %}tx-amount-due{% elif tx.type == 'interest' %}tx-amount-interest{% else %}tx-amount-paid{% endif %}">
+                                        {% if tx.type == 'due' or tx.type == 'interest' %}+{% else %}-{% endif %}₹{{ tx.amount|floatformat:2 }}
                                     </span>
                                 </td>
                                 <td class="text-end">
@@ -914,9 +932,11 @@
         document.getElementById('txType').value = type;
         const btnDue = document.getElementById('btnDue');
         const btnPay = document.getElementById('btnPay');
+        const btnInterest = document.getElementById('btnInterest');
 
         btnDue.className = 'type-btn' + (type === 'due' ? ' active-due' : '');
         btnPay.className = 'type-btn' + (type === 'paid' ? ' active-pay' : '');
+        btnInterest.className = 'type-btn' + (type === 'interest' ? ' active-interest' : '');
     }
 
     /* ─── FORM SUBMIT → SHOW CONFIRMATION ─── */
@@ -952,6 +972,9 @@
         if (type === 'due') {
             newBalance = currentBalance + amount;
             actionText = `You are about to add <strong>₹${amount.toFixed(2)}</strong> as <strong style="color:#ef4444">DUE</strong>.`;
+        } else if (type === 'interest') {
+            newBalance = currentBalance + amount;
+            actionText = `You are about to add <strong>₹${amount.toFixed(2)}</strong> as <strong style="color:#d97706">INTEREST</strong>.`;
         } else {
             newBalance = currentBalance - amount;
             actionText = `You are about to deduct <strong>₹${amount.toFixed(2)}</strong> as <strong style="color:#22c55e">PAYMENT</strong>.`;

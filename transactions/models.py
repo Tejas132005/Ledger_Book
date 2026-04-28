@@ -7,6 +7,7 @@ class Transaction(models.Model):
     TRANSACTION_TYPES = (
         ('due', 'Due'),
         ('paid', 'Paid'),
+        ('interest', 'Interest'),
     )
 
     customer = models.ForeignKey(

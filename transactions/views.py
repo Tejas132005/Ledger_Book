@@ -25,7 +25,7 @@ class AddTransactionView(View):
             messages.error(request, "Amount must be greater than ₹0.")
             return redirect('customer_transactions', customer_id=customer.id)
 
-        if tx_type not in ('due', 'paid'):
+        if tx_type not in ('due', 'paid', 'interest'):
             messages.error(request, "Invalid transaction type.")
             return redirect('customer_transactions', customer_id=customer.id)
 
@@ -45,7 +45,7 @@ class AddTransactionView(View):
 
         current_balance = customer.get_balance()
 
-        if tx_type == 'due':
+        if tx_type in ('due', 'interest'):
             new_balance = current_balance + amount
         else:
             new_balance = current_balance - amount
@@ -72,7 +72,12 @@ class AddTransactionView(View):
             running_balance=new_balance
         )
 
-        action = "added as DUE" if tx_type == 'due' else "received as PAYMENT"
+        if tx_type == 'due':
+            action = "added as DUE"
+        elif tx_type == 'interest':
+            action = "added as INTEREST"
+        else:
+            action = "received as PAYMENT"
         messages.success(request, f"₹{amount:.2f} {action}. New balance: ₹{new_balance:.2f}")
         return redirect('customer_transactions', customer_id=customer.id)
 
